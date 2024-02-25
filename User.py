@@ -1,8 +1,31 @@
 from __future__ import annotations
 
 from collections import deque
+from functools import wraps
 
 from Post import Post, TextPost, ImagePost, SalePost, NotificationType
+
+
+def require_connection(func):
+    @wraps(func)
+    def wrapper(self: User, *args, **kwargs):
+        if self.connected:
+            return func(self, *args, **kwargs)
+
+        return False
+
+    return wrapper
+
+
+def no_self_follow(func):
+    @wraps(func)
+    def wrapper(self: User, user: User):
+        if self in user._followers:
+            return False
+
+        return func(self, user)
+
+    return wrapper
 
 
 class User:
@@ -21,26 +44,6 @@ class User:
         self._followers: set[User] = set()
         self._notifications: deque[str] = deque()
         self._posts: list[Post] = []
-
-    @staticmethod
-    def require_connection(func):
-        def wrapper(self: User, *args, **kwargs):
-            if self.connected:
-                return func(self, *args, **kwargs)
-
-            return False
-
-        return wrapper
-
-    @staticmethod
-    def no_self_follow(func):
-        def wrapper(self: User, user: User):
-            if self in user._followers:
-                return False
-
-            return func(self, user)
-
-        return wrapper
 
     @require_connection
     @no_self_follow
