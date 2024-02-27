@@ -17,17 +17,6 @@ def require_connection(func):
     return wrapper
 
 
-def no_self_follow(func):
-    @wraps(func)
-    def wrapper(self: User, user: User):
-        if self in user._followers:
-            return False
-
-        return func(self, user)
-
-    return wrapper
-
-
 class User:
     """Class representing a user in the social network"""
 
@@ -46,19 +35,20 @@ class User:
         self._posts: list[Post] = []
 
     @require_connection
-    @no_self_follow
     def follow(self, user: User):
         """Perform a follow operation
 
         :param user: User to follow
         :return: True if operation succeeded, else False"""
 
+        if self in user._followers:
+            return False
+        
         user._followers.add(self)
         print(f"{self._username} started following {user._username}")
         return True
 
     @require_connection
-    @no_self_follow
     def unfollow(self, user: User):
         """Perform unfollow operation
 
